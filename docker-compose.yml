@@ -1,0 +1,83 @@
+# version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: coder-ia-postgres
+    environment:
+      POSTGRES_DB: coder_ia_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
+    networks:
+      - coder-ia-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # FastAPI Backend
+  fastapi:
+    build:
+      context: ./back-fastapi
+      dockerfile: Dockerfile
+    container_name: coder-ia-fastapi
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres123@db:5432/coder_ia_db
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=coder_ia_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres123
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./back-fastapi:/app
+    networks:
+      - coder-ia-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Vite React Frontend
+  vite-react:
+    build:
+      context: ./coder-ia-gen
+      dockerfile: Dockerfile
+    container_name: coder-ia-vite
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+      - VITE_NODE_ENV=development
+    depends_on:
+      - fastapi
+    volumes:
+      - ./coder-ia-gen:/app
+      - /app/node_modules
+    networks:
+      - coder-ia-network
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  coder-ia-network:
+    driver: bridge

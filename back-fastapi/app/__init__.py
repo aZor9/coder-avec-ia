@@ -1,0 +1,1 @@
+# __init__.py est vide ici car nous n'avons pas besoin d'autres éléments pour définir un package Python
