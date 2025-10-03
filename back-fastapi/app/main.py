@@ -33,6 +33,7 @@ def get_count():
         else:
             return {"count_number": None}
 
+
 @app.post("/count/increment")
 def increment_count():
     with SessionLocal() as session:
@@ -44,6 +45,21 @@ def increment_count():
         else:
             # Si aucune ligne n'existe, on en crée une à 1
             new_row = CountTable(count_number=1)
+            session.add(new_row)
+            session.commit()
+            return {"count_number": new_row.count_number}
+
+# Nouveau endpoint pour reset le compteur
+@app.post("/count/reset")
+def reset_count():
+    with SessionLocal() as session:
+        count_row = session.query(CountTable).first()
+        if count_row:
+            count_row.count_number = 0
+            session.commit()
+            return {"count_number": count_row.count_number}
+        else:
+            new_row = CountTable(count_number=0)
             session.add(new_row)
             session.commit()
             return {"count_number": new_row.count_number}

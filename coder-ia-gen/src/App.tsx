@@ -18,35 +18,42 @@ function App() {
   }, []);
   
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
+    <div className="main-container">
+      <header className="header">
+        <a href="https://vite.dev" target="_blank" rel="noopener noreferrer">
           <img src={viteLogo} className="logo" alt="Vite logo" />
         </a>
-        <a href="https://react.dev" target="_blank">
+        <a href="https://react.dev" target="_blank" rel="noopener noreferrer">
           <img src={reactLogo} className="logo react" alt="React logo" />
         </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-
-        <button onClick={() => {
+      </header>
+      <h1 className="title-gradient">Compteur IA</h1>
+      <div className="card enhanced-card">
+        <div className="count-label">Valeur actuelle :</div>
+        <button className="count-btn" onClick={() => {
           fetch('http://localhost:8000/count/increment', { method: 'POST' })
             .then((response) => response.json())
             .then((data) => {
               if ('count_number' in data) setCount(Number(data.count_number));
             });
         }}>
-          count is {count}
+          {count}
         </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
+        <button className="reset-btn" onClick={() => {
+          fetch('http://localhost:8000/count/reset', { method: 'POST' })
+            .then((response) => response.json())
+            .then((data) => {
+              if ('count_number' in data) setCount(Number(data.count_number));
+            });
+        }}>
+          Réinitialiser
+        </button>
+        <p className="hint">Cliquez sur le bouton pour incrémenter le compteur</p>
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+      <footer className="footer">
+        <span>🚀 Projet Vite + React + FastAPI + PostgreSQL</span>
+      </footer>
+    </div>
 
   );
 }
